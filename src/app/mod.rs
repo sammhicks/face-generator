@@ -300,7 +300,6 @@ impl Component for App {
         let hair = {
             let width = self.face.width.get();
             let height = 0.5 * self.face.height.get();
-            let thickness = self.face.fringe.thickness.get();
 
             let top = bezier_arch(
                 face_left,
@@ -315,7 +314,7 @@ impl Component for App {
                 face_left + width,
                 face_top + height,
                 width,
-                height - thickness,
+                height - self.face.fringe.thickness.get(),
                 &self.face.fringe.roundness,
                 -1.0,
                 -1.0,
@@ -324,18 +323,30 @@ impl Component for App {
             html!(<path id="hair" class="line" d=format!("M {} {} {} {} Z", face_left, face_top + height, top, bottom) />)
         };
 
-        let chin = {
+        let face = {
+            let width = self.face.width.get();
             let height = 0.5 * self.face.height.get();
-            let arch = bezier_arch(
+
+            let top = bezier_arch(
                 face_left,
-                face_top + 0.5 * self.face.height.get(),
-                self.face.width.get(),
-                0.5 * self.face.height.get(),
-                &self.face.chin.roundness,
+                face_top + height,
+                width,
+                height - self.face.fringe.thickness.get(),
+                &self.face.fringe.roundness,
                 1.0,
+                -1.0,
+            );
+
+            let bottom = bezier_arch(
+                face_left + width,
+                face_top + height,
+                self.face.width.get(),
+                height,
+                &self.face.chin.roundness,
+                -1.0,
                 1.0,
             );
-            html!(<path class="line" d=format!("M {} {} {}", face_left, face_top + height, arch) />)
+            html!(<path id="face" class="line" d=format!("M {} {} {} {} Z", face_left, face_top + height, top, bottom) />)
         };
 
         let mouth = {
@@ -382,7 +393,7 @@ impl Component for App {
 
             html!(
                 <>
-                    <path class="line" d=lip />
+                    <path id="lips" class="line" d=lip />
                     <path class="line" d=smile />
                 </>
             )
@@ -406,8 +417,8 @@ impl Component for App {
                 </fieldset>
                 <svg width=canvas_width height=canvas_height>
                     <g transform=format!("scale({})", self.grid_size.get())>
+                        {face}
                         {hair}
-                        {chin}
                         {eye((face_centre_x - eye_offset, face_centre_y), &self.eyes.size)}
                         {eye((face_centre_x + eye_offset, face_centre_y), &self.eyes.size)}
                         {mouth}
