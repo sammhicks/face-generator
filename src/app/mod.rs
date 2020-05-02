@@ -6,19 +6,11 @@ mod slider;
 use group::Group;
 use slider::{SharedPair, SharedValue, Slider, Value};
 
-fn bezier_arch(
-    left: Value,
-    start_y: Value,
-    width: Value,
-    height: Value,
-    roundness: &SharedPair,
-    sx: Value,
-    sy: Value,
-) -> String {
-    let right = left + sx * width;
+fn bezier_arch(rx: Value, ry: Value, roundness: &SharedPair, sx: Value, sy: Value) -> String {
+    let left = sx * -rx;
+    let right = sx * rx;
 
-    let middle_x = 0.5 * (left + right);
-    let middle_y = start_y + sy * height;
+    let middle_y = sy * ry;
 
     let roundness_x = sx * roundness.0.get();
     let roundness_y = sy * roundness.1.get();
@@ -26,54 +18,17 @@ fn bezier_arch(
     format!(
         "C{} {}, {} {}, {} {} C{} {}, {} {}, {} {}",
         left,
-        start_y + roundness_y,
-        middle_x - roundness_x,
+        roundness_y,
+        -roundness_x,
         middle_y,
-        middle_x,
+        0.0,
         middle_y,
-        middle_x + roundness_x,
+        roundness_x,
         middle_y,
         right,
-        start_y + roundness_y,
+        roundness_y,
         right,
-        start_y,
-    )
-}
-
-fn eye(centre: (Value, Value), size: &SharedPair) -> Html {
-    let left = centre.0 - 0.5 * size.0.get();
-    let right = centre.0 + 0.5 * size.0.get();
-    let offset = 0.5 * size.1.get();
-
-    let iris_radius = 0.75 * offset;
-
-    let pupil_radius = 0.5 * iris_radius;
-
-    let border = format!(
-        "M{} {} C{} {}, {} {}, {} {} C{} {}, {} {}, {} {} Z",
-        left,
-        centre.1,
-        left + offset,
-        centre.1 - offset,
-        right - offset,
-        centre.1 - offset,
-        right,
-        centre.1,
-        right - offset,
-        centre.1 + offset,
-        left + offset,
-        centre.1 + offset,
-        left,
-        centre.1
-    );
-
-    html!(
-        <g>
-            <path class="eye" d=border />
-            <circle class="iris" cx=centre.0 cy=centre.1 r=iris_radius />
-            <circle class="pupil" cx=centre.0 cy=centre.1 r=pupil_radius />
-            <path class="line" d=border />
-        </g>
+        0.0,
     )
 }
 
@@ -161,6 +116,53 @@ impl Eyes {
             </Group>
         )
     }
+
+    fn view_one(&self, sx: Value) -> Html {
+        let width = self.size.0.get();
+        let separation = 0.5 * self.separation.get();
+
+        let cx = sx * 0.5 * (self.separation.get() + width);
+
+        let left = sx * separation;
+        let right = sx * (separation + width);
+        let offset = 0.5 * self.size.1.get();
+        let iris_radius = 0.75 * offset;
+        let pupil_radius = 0.5 * iris_radius;
+        let border = format!(
+            "M{} {} C{} {}, {} {}, {} {} C{} {}, {} {}, {} {} Z",
+            left,
+            0.0,
+            left + sx * offset,
+            -offset,
+            right - sx * offset,
+            -offset,
+            right,
+            0.0,
+            right - sx * offset,
+            offset,
+            left + sx * offset,
+            offset,
+            left,
+            0.0
+        );
+        html!(
+            <g>
+                <path class="eye" d=border />
+                <circle class="iris" cx=cx cy=0.0 r=iris_radius />
+                <circle class="pupil" cx=cx cy=0.0 r=pupil_radius />
+                <path class="line" d=border />
+            </g>
+        )
+    }
+
+    fn view(&self) -> Html {
+        html!(
+            <>
+                {self.view_one(-1.0)}
+                {self.view_one(1.0)}
+            </>
+        )
+    }
 }
 
 struct Nose {
@@ -199,7 +201,7 @@ impl Nose {
         )
     }
 
-    fn view(&self, cx: Value, cy: Value) -> Html {
+    fn view(&self) -> Html {
         let width = 0.5 * self.width.get();
         let height = self.height.get();
 
@@ -287,7 +289,7 @@ impl Nose {
         };
 
         html!(
-            <g transform=format!("translate({}, {})", cx, cy)>
+            <g>
                 <path class="line" d=left_curve/>
                 <path class="line" d=right_curve/>
                 <path class="line" d=bottom_curve/>
@@ -427,76 +429,43 @@ impl Component for App {
 
     fn view(&self) -> Html {
         let border = 1.0;
-        let face_width = self.face.width.get();
-        let face_height = self.face.height.get();
+        let face_rx = 0.5 * self.face.width.get();
+        let face_ry = 0.5 * self.face.height.get();
 
-        let face_left = border;
-        let face_right = face_left + face_width;
-        let face_top = border;
-        let face_bottom = face_top + face_height;
-
-        let face_centre_x = 0.5 * (face_left + face_right);
-        let face_centre_y = 0.5 * (face_top + face_bottom);
-
-        let eye_offset = 0.5 * (self.eyes.separation.get() + self.eyes.size.0.get());
+        let face_centre_x = border + face_rx;
+        let face_centre_y = border + face_ry;
 
         let hair = {
-            let width = self.face.width.get();
-            let height = 0.5 * self.face.height.get();
-
-            let top = bezier_arch(
-                face_left,
-                face_top + height,
-                width,
-                height,
-                &self.face.forehead.roundness,
-                1.0,
-                -1.0,
-            );
+            let top = bezier_arch(face_rx, face_ry, &self.face.forehead.roundness, 1.0, -1.0);
             let bottom = bezier_arch(
-                face_left + width,
-                face_top + height,
-                width,
-                height - self.face.fringe.thickness.get(),
+                face_rx,
+                face_ry - self.face.fringe.thickness.get(),
                 &self.face.fringe.roundness,
                 -1.0,
                 -1.0,
             );
 
-            html!(<path id="hair" class="line" d=format!("M {} {} {} {} Z", face_left, face_top + height, top, bottom) />)
+            html!(<path id="hair" class="line" d=format!("M {} {} {} {} Z", -face_rx, 0.0, top, bottom) />)
         };
 
         let face = {
-            let width = self.face.width.get();
-            let height = 0.5 * self.face.height.get();
-
             let top = bezier_arch(
-                face_left,
-                face_top + height,
-                width,
-                height - 0.5 * self.face.fringe.thickness.get(),
+                face_rx,
+                face_ry - 0.5 * self.face.fringe.thickness.get(),
                 &self.face.fringe.roundness,
                 1.0,
                 -1.0,
             );
 
-            let bottom = bezier_arch(
-                face_left + width,
-                face_top + height,
-                self.face.width.get(),
-                height,
-                &self.face.chin.roundness,
-                -1.0,
-                1.0,
-            );
-            html!(<path id="face" class="line" d=format!("M {} {} {} {} Z", face_left, face_top + height, top, bottom) />)
+            let bottom = bezier_arch(face_rx, face_ry, &self.face.chin.roundness, -1.0, 1.0);
+            html!(<path id="face" class="line" d=format!("M {} {} {} {} Z", -face_rx, 0.0, top, bottom) />)
         };
 
         let mouth = {
-            let y = 0.5 * (1.0 + self.mouth.position.get()) * face_height;
-            let left = face_centre_x - 0.5 * self.mouth.width.get();
-            let right = face_centre_x + 0.5 * self.mouth.width.get();
-            let x = 0.5 * (left + right);
+            let y = self.mouth.position.get() * face_ry;
+            let left = -0.5 * self.mouth.width.get();
+            let right = 0.5 * self.mouth.width.get();
+            let x = 0.0;
 
             let lip = format!(
                 "M{} {} C{} {}, {} {}, {} {} C{} {}, {} {}, {} {} C{} {}, {} {}, {} {} Z",
@@ -542,8 +511,8 @@ impl Component for App {
             )
         };
 
-        let canvas_width = self.grid_size.get() * (face_right + border);
-        let canvas_height = self.grid_size.get() * (face_bottom + border);
+        let canvas_width = self.grid_size.get() * (self.face.width.get() + 2.0 * border);
+        let canvas_height = self.grid_size.get() * (self.face.height.get() + 2.0 * border);
 
         let redraw = self.link.callback(Msg::Redraw);
 
@@ -560,12 +529,11 @@ impl Component for App {
                     {self.mouth.controls(redraw.clone())}
                 </fieldset>
                 <svg width=canvas_width height=canvas_height>
-                    <g transform=format!("scale({})", self.grid_size.get())>
+                    <g transform=format!("scale({}) translate({}, {})", self.grid_size.get(), face_centre_x, face_centre_y)>
                         {face}
                         {hair}
-                        {eye((face_centre_x - eye_offset, face_centre_y), &self.eyes.size)}
-                        {eye((face_centre_x + eye_offset, face_centre_y), &self.eyes.size)}
-                        {self.nose.view(face_centre_x, face_centre_y)}
+                        {self.eyes.view()}
+                        {self.nose.view()}
                         {mouth}
                     </g>
                 </svg>
