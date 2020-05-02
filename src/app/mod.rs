@@ -99,6 +99,44 @@ impl Face {
             </Group>
         )
     }
+
+    fn view(&self) -> Html {
+        let face_rx = 0.5 * self.width.get();
+        let face_ry = 0.5 * self.height.get();
+
+        let face = {
+            let top = bezier_arch(
+                face_rx,
+                face_ry - 0.5 * self.fringe.thickness.get(),
+                &self.fringe.roundness,
+                1.0,
+                -1.0,
+            );
+
+            let bottom = bezier_arch(face_rx, face_ry, &self.chin.roundness, -1.0, 1.0);
+            html!(<path id="face" class="line" d=format!("M {} {} {} {} Z", -face_rx, 0.0, top, bottom) />)
+        };
+
+        let hair = {
+            let top = bezier_arch(face_rx, face_ry, &self.forehead.roundness, 1.0, -1.0);
+            let bottom = bezier_arch(
+                face_rx,
+                face_ry - self.fringe.thickness.get(),
+                &self.fringe.roundness,
+                -1.0,
+                -1.0,
+            );
+
+            html!(<path id="hair" class="line" d=format!("M {} {} {} {} Z", -face_rx, 0.0, top, bottom) />)
+        };
+
+        html!(
+            <>
+                {face}
+                {hair}
+            </>
+        )
+    }
 }
 
 struct Eyes {
@@ -354,6 +392,56 @@ impl Mouth {
             </Group>
         )
     }
+
+    fn view(&self, face_ry: Value) -> Html {
+        let y = self.position.get() * face_ry;
+        let left = -0.5 * self.width.get();
+        let right = 0.5 * self.width.get();
+        let x = 0.0;
+
+        let lip = format!(
+            "M{} {} C{} {}, {} {}, {} {} C{} {}, {} {}, {} {} C{} {}, {} {}, {} {} Z",
+            left,
+            y,
+            left + self.top_lip.roundness.0.get(),
+            y - self.top_lip.roundness.1.get(),
+            x - self.top_lip.philtrum.0.get(),
+            y - self.top_lip.philtrum.1.get(),
+            x,
+            y - self.top_lip.philtrum.1.get(),
+            x + self.top_lip.philtrum.0.get(),
+            y - self.top_lip.philtrum.1.get(),
+            right - self.top_lip.roundness.0.get(),
+            y - self.top_lip.roundness.1.get(),
+            right,
+            y,
+            right - self.bottom_lip.roundness.0.get(),
+            y + self.bottom_lip.roundness.1.get(),
+            left + self.bottom_lip.roundness.0.get(),
+            y + self.bottom_lip.roundness.1.get(),
+            left,
+            y
+        );
+
+        let smile = format!(
+            "M{} {} C{} {}, {} {}, {} {}",
+            left,
+            y,
+            left + self.smile.0.get(),
+            y + self.smile.1.get(),
+            right - self.smile.0.get(),
+            y + self.smile.1.get(),
+            right,
+            y
+        );
+
+        html!(
+            <>
+                <path id="lips" class="line" d=lip />
+                <path class="line" d=smile />
+            </>
+        )
+    }
 }
 
 pub struct App {
@@ -435,82 +523,6 @@ impl Component for App {
         let face_centre_x = border + face_rx;
         let face_centre_y = border + face_ry;
 
-        let hair = {
-            let top = bezier_arch(face_rx, face_ry, &self.face.forehead.roundness, 1.0, -1.0);
-            let bottom = bezier_arch(
-                face_rx,
-                face_ry - self.face.fringe.thickness.get(),
-                &self.face.fringe.roundness,
-                -1.0,
-                -1.0,
-            );
-
-            html!(<path id="hair" class="line" d=format!("M {} {} {} {} Z", -face_rx, 0.0, top, bottom) />)
-        };
-
-        let face = {
-            let top = bezier_arch(
-                face_rx,
-                face_ry - 0.5 * self.face.fringe.thickness.get(),
-                &self.face.fringe.roundness,
-                1.0,
-                -1.0,
-            );
-
-            let bottom = bezier_arch(face_rx, face_ry, &self.face.chin.roundness, -1.0, 1.0);
-            html!(<path id="face" class="line" d=format!("M {} {} {} {} Z", -face_rx, 0.0, top, bottom) />)
-        };
-
-        let mouth = {
-            let y = self.mouth.position.get() * face_ry;
-            let left = -0.5 * self.mouth.width.get();
-            let right = 0.5 * self.mouth.width.get();
-            let x = 0.0;
-
-            let lip = format!(
-                "M{} {} C{} {}, {} {}, {} {} C{} {}, {} {}, {} {} C{} {}, {} {}, {} {} Z",
-                left,
-                y,
-                left + self.mouth.top_lip.roundness.0.get(),
-                y - self.mouth.top_lip.roundness.1.get(),
-                x - self.mouth.top_lip.philtrum.0.get(),
-                y - self.mouth.top_lip.philtrum.1.get(),
-                x,
-                y - self.mouth.top_lip.philtrum.1.get(),
-                x + self.mouth.top_lip.philtrum.0.get(),
-                y - self.mouth.top_lip.philtrum.1.get(),
-                right - self.mouth.top_lip.roundness.0.get(),
-                y - self.mouth.top_lip.roundness.1.get(),
-                right,
-                y,
-                right - self.mouth.bottom_lip.roundness.0.get(),
-                y + self.mouth.bottom_lip.roundness.1.get(),
-                left + self.mouth.bottom_lip.roundness.0.get(),
-                y + self.mouth.bottom_lip.roundness.1.get(),
-                left,
-                y
-            );
-
-            let smile = format!(
-                "M{} {} C{} {}, {} {}, {} {}",
-                left,
-                y,
-                left + self.mouth.smile.0.get(),
-                y + self.mouth.smile.1.get(),
-                right - self.mouth.smile.0.get(),
-                y + self.mouth.smile.1.get(),
-                right,
-                y
-            );
-
-            html!(
-                <>
-                    <path id="lips" class="line" d=lip />
-                    <path class="line" d=smile />
-                </>
-            )
-        };
-
         let canvas_width = self.grid_size.get() * (self.face.width.get() + 2.0 * border);
         let canvas_height = self.grid_size.get() * (self.face.height.get() + 2.0 * border);
 
@@ -530,11 +542,10 @@ impl Component for App {
                 </fieldset>
                 <svg width=canvas_width height=canvas_height>
                     <g transform=format!("scale({}) translate({}, {})", self.grid_size.get(), face_centre_x, face_centre_y)>
-                        {face}
-                        {hair}
+                        {self.face.view()}
                         {self.eyes.view()}
                         {self.nose.view()}
-                        {mouth}
+                        {self.mouth.view(face_ry)}
                     </g>
                 </svg>
             </div>
