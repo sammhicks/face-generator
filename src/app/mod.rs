@@ -163,6 +163,139 @@ impl Eyes {
     }
 }
 
+struct Nose {
+    width: SharedValue,
+    height: SharedValue,
+    bridge_gap: SharedPair,
+    bridge_top_curve: SharedPair,
+    bridge_side_curve: SharedPair,
+    nostril_radius: SharedValue,
+    tip_curve: SharedValue,
+}
+
+impl Nose {
+    fn controls(&self, value_changed: Callback<()>) -> Html {
+        html!(
+            <Group name="Nose">
+                <Slider name="Width" min=0.0 max=4.0 value=self.width.clone() value_changed=value_changed.clone() />
+                <Slider name="Height" min=0.0 max=5.0 value=self.height.clone() value_changed=value_changed.clone() />
+                <Group name="Bridge">
+                    <Group name="Gap">
+                        <Slider name="X" min=0.0 max=2.0 value=self.bridge_gap.0.clone() value_changed=value_changed.clone() />
+                        <Slider name="Y" min=0.0 max=2.0 value=self.bridge_gap.1.clone() value_changed=value_changed.clone() />
+                    </Group>
+                    <Group name="Top Curve">
+                        <Slider name="X" min=0.0 max=4.0 value=self.bridge_top_curve.0.clone() value_changed=value_changed.clone() />
+                        <Slider name="Y" min=0.0 max=4.0 value=self.bridge_top_curve.1.clone() value_changed=value_changed.clone() />
+                    </Group>
+                    <Group name="Side Curve">
+                        <Slider name="X" min=0.0 max=1.0 value=self.bridge_side_curve.0.clone() value_changed=value_changed.clone() />
+                        <Slider name="Y" min=0.0 max=1.0 value=self.bridge_side_curve.1.clone() value_changed=value_changed.clone() />
+                    </Group>
+                    <Slider name="Nostril" min=0.0 max=0.5 value=self.nostril_radius.clone() value_changed=value_changed.clone() />
+                    <Slider name="Tip" min=0.0 max=0.5 value=self.tip_curve.clone() value_changed=value_changed.clone() />
+                </Group>
+            </Group>
+        )
+    }
+
+    fn view(&self, cx: Value, cy: Value) -> Html {
+        let width = 0.5 * self.width.get();
+        let height = self.height.get();
+
+        let bridge_top_curve = (self.bridge_top_curve.0.get(), self.bridge_top_curve.1.get());
+        let bridge_side_curve = (
+            self.bridge_side_curve.0.get(),
+            self.bridge_side_curve.1.get(),
+        );
+        let nostril_radius = self.nostril_radius.get();
+        let tip_curve = self.tip_curve.get();
+
+        let left_curve = format!(
+            "M{} {} C{} {}, {} {}, {} {} C{} {}, {} {}, {} {}",
+            -0.5 * self.bridge_gap.0.get(),
+            self.bridge_gap.1.get(),
+            -self.bridge_gap.0.get(),
+            bridge_top_curve.0,
+            -width,
+            height - bridge_side_curve.0 - bridge_top_curve.1,
+            -width,
+            height - bridge_side_curve.0,
+            -width,
+            height - bridge_side_curve.0 + bridge_side_curve.1,
+            -width / 3.0 - bridge_side_curve.1,
+            height - nostril_radius + bridge_side_curve.1,
+            -width / 3.0,
+            height - nostril_radius,
+        );
+
+        let right_curve = format!(
+            "M{} {} C{} {}, {} {}, {} {} C{} {}, {} {}, {} {}",
+            0.5 * self.bridge_gap.0.get(),
+            self.bridge_gap.1.get(),
+            self.bridge_gap.0.get(),
+            bridge_top_curve.0,
+            width,
+            height - bridge_side_curve.0 - bridge_top_curve.1,
+            width,
+            height - bridge_side_curve.0,
+            width,
+            height - bridge_side_curve.0 + bridge_side_curve.1,
+            width / 3.0 + bridge_side_curve.1,
+            height - nostril_radius + bridge_side_curve.1,
+            width / 3.0,
+            height - nostril_radius,
+        );
+
+        let bottom_curve = {
+            let outer_x = 5.0 * width / 6.0;
+            let inner_x = 1.0 * width / 3.0;
+
+            let top_y = height - 2.0 * nostril_radius;
+            let middle_y = height - 1.0 * nostril_radius;
+            let bottom_y = height;
+
+            format!(
+                "M{} {} C{} {}, {} {}, {} {} C{} {}, {} {}, {} {} C{} {}, {} {}, {} {} C{} {}, {} {}, {} {}",
+                -outer_x,
+                middle_y,
+                -outer_x + nostril_radius,
+                top_y,
+                -inner_x - nostril_radius,
+                top_y,
+                -inner_x,
+                middle_y,
+                -inner_x + tip_curve,
+                middle_y + tip_curve,
+                -tip_curve,
+                bottom_y,
+                0.0,
+                bottom_y,
+                tip_curve,
+                bottom_y,
+                inner_x - tip_curve,
+                middle_y + tip_curve,
+                inner_x,
+                middle_y,
+                inner_x + nostril_radius,
+                top_y,
+                outer_x - nostril_radius,
+                top_y,
+                outer_x,
+                middle_y,
+            )
+        };
+
+        html!(
+            <g transform=format!("translate({}, {})", cx, cy)>
+                <path class="line" d=left_curve/>
+                <path class="line" d=right_curve/>
+                <path class="line" d=bottom_curve/>
+            </g>
+        )
+    }
+}
+
 struct TopLip {
     roundness: SharedPair,
     philtrum: SharedPair,
@@ -226,6 +359,7 @@ pub struct App {
     grid_size: SharedValue,
     face: Face,
     eyes: Eyes,
+    nose: Nose,
     mouth: Mouth,
 }
 
@@ -260,6 +394,15 @@ impl Component for App {
             eyes: Eyes {
                 size: SharedValue::new_pair(4.0, 2.0),
                 separation: SharedValue::new(2.0),
+            },
+            nose: Nose {
+                width: SharedValue::new(3.0),
+                height: SharedValue::new(4.3),
+                bridge_gap: SharedValue::new_pair(1.0, 1.0),
+                bridge_top_curve: SharedValue::new_pair(3.0, 0.7),
+                bridge_side_curve: SharedValue::new_pair(0.8, 0.5),
+                nostril_radius: SharedValue::new(0.3),
+                tip_curve: SharedValue::new(0.2),
             },
             mouth: Mouth {
                 position: SharedValue::new(0.65),
@@ -331,7 +474,7 @@ impl Component for App {
                 face_left,
                 face_top + height,
                 width,
-                height - self.face.fringe.thickness.get(),
+                height - 0.5 * self.face.fringe.thickness.get(),
                 &self.face.fringe.roundness,
                 1.0,
                 -1.0,
@@ -413,6 +556,7 @@ impl Component for App {
                     </Group>
                     {self.face.controls(redraw.clone())}
                     {self.eyes.controls(redraw.clone())}
+                    {self.nose.controls(redraw.clone())}
                     {self.mouth.controls(redraw.clone())}
                 </fieldset>
                 <svg width=canvas_width height=canvas_height>
@@ -421,6 +565,7 @@ impl Component for App {
                         {hair}
                         {eye((face_centre_x - eye_offset, face_centre_y), &self.eyes.size)}
                         {eye((face_centre_x + eye_offset, face_centre_y), &self.eyes.size)}
+                        {self.nose.view(face_centre_x, face_centre_y)}
                         {mouth}
                     </g>
                 </svg>

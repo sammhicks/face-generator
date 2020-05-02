@@ -101,13 +101,19 @@ impl Component for Slider {
 
     fn view(&self) -> Html {
         let value = self.props.value.get();
+
+        let max_is_large = self.props.max > 5.0;
+
+        let value_step = if max_is_large { 0.5 } else { 0.1 };
+        let max_step = if max_is_large { 1.0 } else { 0.5 };
+
         html! {
             <div class="slider">
                 <span class="label">{self.props.name}</span>
                 <input type="number" value=self.props.min oninput=self.link.callback(Msg::MinChanged)/>
-                <input type="range" min=self.props.min max=self.props.max value=value step=0.01 oninput=self.link.callback(Msg::ValueChanged)/>
+                <input type="range" min=self.props.min max=self.props.max value=value step=value_step oninput=self.link.callback(Msg::ValueChanged)/>
                 <output>{format!("{:05.2}", value)}</output>
-                <input type="number" value=self.props.max oninput=self.link.callback(Msg::MaxChanged)/>
+                <input type="number" value=self.props.max step=max_step oninput=self.link.callback(Msg::MaxChanged)/>
                 <button onclick=self.link.callback(|_| Msg::ResetClicked)>{"Reset"}</button>
             </div>
         }
