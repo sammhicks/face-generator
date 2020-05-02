@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Generator</title>
+    <script src="/pkg/bundle.js" defer></script>
+    <style>
+        body,
+        body>div,
+        #controls {
+            display: flex;
+            flex-flow: column nowrap;
+            align-items: center;
+        }
+
+        body>div {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+        }
+
+        #controls {
+            overflow-y: scroll;
+        }
+
+        svg {
+            flex: 0 0 auto;
+        }
+
+        fieldset {
+            align-self: stretch;
+        }
+
+        .clickable,
+        button {
+            cursor: pointer;
+        }
+
+        fieldset.hide_children>:not(legend) {
+            display: none;
+        }
+
+        span.label {
+            display: inline-block;
+            font-family: monospace;
+            text-align: right;
+            width: 10ch;
+        }
+
+        input,
+        output {
+            font-family: monospace;
+        }
+
+        input[type=number] {
+            width: 8ch;
+        }
+
+        .slider {
+            display: flex;
+            flex-flow: row nowrap;
+            align-items: center;
+        }
+
+        .slider>* {
+            margin: 0 1ch;
+        }
+
+        path.line {
+            stroke: black;
+            stroke-width: 0.1px;
+            fill: none;
+        }
+
+        .eye {
+            stroke: none;
+            fill: white;
+        }
+
+        circle.iris {
+            stroke: none;
+            fill: lightblue;
+        }
+
+        circle.pupil {
+            stroke: none;
+            fill: black;
+        }
+
+        #hair {
+            fill: brown;
+        }
+    </style>
+</head>
+
+<body>
+
+</body>
+
+</html>
