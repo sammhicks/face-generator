@@ -1,10 +1,10 @@
 use yew::{prelude::*, services::ConsoleService};
 
-use crate::value::{SharedValue, Value};
+use crate::value::Value;
 
-fn set_value(console: &mut ConsoleService, value: &mut Value, data: yew::html::InputData) {
+fn set_value(console: &mut ConsoleService, value: *mut Value, data: yew::html::InputData) {
     match data.value.parse() {
-        Ok(v) => *value = v,
+        Ok(v) => unsafe { *value = v },
         Err(err) => console.error(&format!("{:?}", err)),
     }
 }
@@ -16,6 +16,7 @@ pub struct Slider {
     console: ConsoleService,
 }
 
+#[derive(Debug)]
 pub enum Msg {
     MinChanged(yew::html::InputData),
     MaxChanged(yew::html::InputData),
@@ -32,7 +33,7 @@ pub struct Props {
     #[props(required)]
     pub max: Value,
     #[props(required)]
-    pub value: SharedValue,
+    pub value: *mut Value,
     #[props(required)]
     pub value_changed: Callback<()>,
 }
@@ -42,8 +43,8 @@ impl Component for Slider {
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let initial_value = props.value.get();
-        Slider {
+        let initial_value = unsafe { *props.value };
+        Self {
             link,
             props,
             initial_value,
@@ -56,11 +57,11 @@ impl Component for Slider {
             Msg::MinChanged(data) => set_value(&mut self.console, &mut self.props.min, data),
             Msg::MaxChanged(data) => set_value(&mut self.console, &mut self.props.max, data),
             Msg::ValueChanged(data) => {
-                self.props.value.set_str(&mut self.console, data);
+                set_value(&mut self.console, self.props.value, data);
                 self.props.value_changed.emit(());
             }
             Msg::ResetClicked => {
-                self.props.value.set(self.initial_value);
+                unsafe { *self.props.value = self.initial_value };
                 self.props.value_changed.emit(());
             }
         };
@@ -68,11 +69,18 @@ impl Component for Slider {
     }
 
     fn view(&self) -> Html {
-        let value = self.props.value.get();
+        let value = unsafe { *self.props.value };
 
         let max_is_large = self.props.max > 5.0;
+        let max_is_small = self.props.max < 1.0;
 
-        let value_step = if max_is_large { 0.5 } else { 0.1 };
+        let value_step = if max_is_large {
+            0.5
+        } else if max_is_small {
+            0.05
+        } else {
+            0.1
+        };
         let max_step = if max_is_large { 1.0 } else { 0.5 };
 
         html! {
@@ -86,4 +94,11 @@ impl Component for Slider {
             </div>
         }
     }
+}
+
+#[macro_export]
+macro_rules! slider {
+    ( $name:expr, $min:expr, $max:expr, $value:expr ) => {
+        html!(<Slider name=$name min=$min max=$max value=&mut $value as *mut Value value_changed=value_changed.clone() />)
+    };
 }

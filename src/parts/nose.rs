@@ -1,64 +1,56 @@
 use yew::prelude::*;
 
-use crate::{
-    group::Group,
-    slider::Slider,
-    value::{SharedPair, SharedValue},
-};
+use crate::{group::Group, slider::Slider, value::Value};
 
 pub struct Nose {
-    pub width: SharedValue,
-    pub height: SharedValue,
-    pub bridge_gap: SharedPair,
-    pub bridge_top_curve: SharedPair,
-    pub bridge_side_curve: SharedPair,
-    pub nostril_radius: SharedValue,
-    pub tip_curve: SharedValue,
+    pub width: Value,
+    pub height: Value,
+    pub bridge_gap: (Value, Value),
+    pub bridge_top_curve: (Value, Value),
+    pub bridge_side_curve: (Value, Value),
+    pub nostril_radius: Value,
+    pub tip_curve: Value,
 }
 
 impl Nose {
-    pub fn controls(&self, value_changed: Callback<()>) -> Html {
+    pub fn controls(&mut self, value_changed: Callback<()>) -> Html {
         html!(
             <Group name="Nose">
-                <Slider name="Width" min=0.0 max=4.0 value=self.width.clone() value_changed=value_changed.clone() />
-                <Slider name="Height" min=0.0 max=5.0 value=self.height.clone() value_changed=value_changed.clone() />
+                {crate::slider!("Width", 0.0, 4.0, self.width)}
+                {crate::slider!("Height", 0.0, 5.0, self.height)}
                 <Group name="Bridge">
                     <Group name="Gap">
-                        <Slider name="X" min=0.0 max=2.0 value=self.bridge_gap.0.clone() value_changed=value_changed.clone() />
-                        <Slider name="Y" min=0.0 max=2.0 value=self.bridge_gap.1.clone() value_changed=value_changed.clone() />
+                        {crate::slider!("X", 0.0, 2.0, self.bridge_gap.0)}
+                        {crate::slider!("Y", 0.0, 2.0, self.bridge_gap.1)}
                     </Group>
                     <Group name="Top Curve">
-                        <Slider name="X" min=0.0 max=4.0 value=self.bridge_top_curve.0.clone() value_changed=value_changed.clone() />
-                        <Slider name="Y" min=0.0 max=4.0 value=self.bridge_top_curve.1.clone() value_changed=value_changed.clone() />
+                        {crate::slider!("X", 0.0, 4.0, self.bridge_top_curve.0)}
+                        {crate::slider!("Y", 0.0, 4.0, self.bridge_top_curve.1)}
                     </Group>
                     <Group name="Side Curve">
-                        <Slider name="X" min=0.0 max=1.0 value=self.bridge_side_curve.0.clone() value_changed=value_changed.clone() />
-                        <Slider name="Y" min=0.0 max=1.0 value=self.bridge_side_curve.1.clone() value_changed=value_changed.clone() />
+                        {crate::slider!("X", 0.0, 1.0, self.bridge_side_curve.0)}
+                        {crate::slider!("Y", 0.0, 1.0, self.bridge_side_curve.1)}
                     </Group>
-                    <Slider name="Nostril" min=0.0 max=0.5 value=self.nostril_radius.clone() value_changed=value_changed.clone() />
-                    <Slider name="Tip" min=0.0 max=0.5 value=self.tip_curve.clone() value_changed=value_changed.clone() />
+                    {crate::slider!("Nostril", 0.0, 0.5, self.nostril_radius)}
+                    {crate::slider!("Tip", 0.0, 0.5, self.tip_curve)}
                 </Group>
             </Group>
         )
     }
 
     pub fn view(&self) -> Html {
-        let width = 0.5 * self.width.get();
-        let height = self.height.get();
-
-        let bridge_top_curve = (self.bridge_top_curve.0.get(), self.bridge_top_curve.1.get());
-        let bridge_side_curve = (
-            self.bridge_side_curve.0.get(),
-            self.bridge_side_curve.1.get(),
-        );
-        let nostril_radius = self.nostril_radius.get();
-        let tip_curve = self.tip_curve.get();
+        let width = 0.5 * self.width;
+        let height = self.height;
+        let bridge_top_curve = (self.bridge_top_curve.0, self.bridge_top_curve.1);
+        let bridge_side_curve = (self.bridge_side_curve.0, self.bridge_side_curve.1);
+        let nostril_radius = self.nostril_radius;
+        let tip_curve = self.tip_curve;
 
         let left_curve = format!(
             "M{} {} C{} {}, {} {}, {} {} C{} {}, {} {}, {} {}",
-            -0.5 * self.bridge_gap.0.get(),
-            self.bridge_gap.1.get(),
-            -self.bridge_gap.0.get(),
+            -0.5 * self.bridge_gap.0,
+            self.bridge_gap.1,
+            -self.bridge_gap.0,
             bridge_top_curve.0,
             -width,
             height - bridge_side_curve.0 - bridge_top_curve.1,
@@ -74,9 +66,9 @@ impl Nose {
 
         let right_curve = format!(
             "M{} {} C{} {}, {} {}, {} {} C{} {}, {} {}, {} {}",
-            0.5 * self.bridge_gap.0.get(),
-            self.bridge_gap.1.get(),
-            self.bridge_gap.0.get(),
+            0.5 * self.bridge_gap.0,
+            self.bridge_gap.1,
+            self.bridge_gap.0,
             bridge_top_curve.0,
             width,
             height - bridge_side_curve.0 - bridge_top_curve.1,

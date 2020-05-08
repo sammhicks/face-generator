@@ -1,25 +1,21 @@
 use yew::prelude::*;
 
-use crate::{
-    group::Group,
-    slider::Slider,
-    value::{SharedPair, SharedValue, Value},
-};
+use crate::{color::ColorPicker, group::Group, slider::Slider, value::Value};
 
 pub struct TopLip {
-    pub roundness: SharedPair,
-    pub philtrum: SharedPair,
+    pub roundness: (Value, Value),
+    pub philtrum: (Value, Value),
 }
 
 impl TopLip {
-    pub fn controls(&self, value_changed: Callback<()>) -> Html {
+    pub fn controls(&mut self, value_changed: Callback<()>) -> Html {
         html!(
             <Group name="Top Lip">
-                <Slider name="RX" min=0.0 max=2.0 value=self.roundness.0.clone() value_changed=value_changed.clone() />
-                <Slider name="RY" min=0.0 max=2.0 value=self.roundness.1.clone() value_changed=value_changed.clone() />
+                {crate::slider!("RX", 0.0, 2.0, self.roundness.0)}
+                {crate::slider!("RY", 0.0, 2.0, self.roundness.1)}
                 <Group name="Philtrum">
-                    <Slider name="Width" min=0.0 max=1.0 value=self.philtrum.0.clone() value_changed=value_changed.clone() />
-                    <Slider name="Position" min=0.0 max=1.0 value=self.philtrum.1.clone() value_changed=value_changed.clone() />
+                    {crate::slider!("Width", 0.0, 1.0, self.philtrum.0)}
+                    {crate::slider!("Position", 0.0, 1.0, self.philtrum.1)}
                 </Group>
             </Group>
         )
@@ -27,68 +23,70 @@ impl TopLip {
 }
 
 pub struct BottomLip {
-    pub roundness: SharedPair,
+    pub roundness: (Value, Value),
 }
 
 impl BottomLip {
-    pub fn controls(&self, value_changed: Callback<()>) -> Html {
+    pub fn controls(&mut self, value_changed: Callback<()>) -> Html {
         html!(
             <Group name="Bottom Lip">
-                <Slider name="RX" min=0.0 max=2.0 value=self.roundness.0.clone() value_changed=value_changed.clone() />
-                <Slider name="RY" min=0.0 max=2.0 value=self.roundness.1.clone() value_changed=value_changed.clone() />
+                {crate::slider!("RX", 0.0, 2.0, self.roundness.0)}
+                {crate::slider!("RY", 0.0, 2.0, self.roundness.1)}
             </Group>
         )
     }
 }
 
 pub struct Mouth {
-    pub position: SharedValue,
-    pub width: SharedValue,
+    pub color: String,
+    pub position: Value,
+    pub width: Value,
     pub top_lip: TopLip,
     pub bottom_lip: BottomLip,
-    pub smile: SharedPair,
+    pub smile: (Value, Value),
 }
 
 impl Mouth {
-    pub fn controls(&self, value_changed: Callback<()>) -> Html {
+    pub fn controls(&mut self, value_changed: Callback<()>) -> Html {
         html!(
             <Group name="Mouth">
-                { self.top_lip.controls(value_changed.clone()) }
-                { self.bottom_lip.controls(value_changed.clone()) }
+                {crate::color!("Color", self.color)}
+                {self.top_lip.controls(value_changed.clone())}
+                {self.bottom_lip.controls(value_changed.clone())}
                 <Group name="Smile">
-                    <Slider name="Width" min=0.0 max=2.0 value=self.smile.0.clone() value_changed=value_changed.clone() />
-                    <Slider name="Height" min=0.0 max=2.0 value=self.smile.1.clone() value_changed=value_changed.clone() />
+                    {crate::slider!("Width", 0.0, 2.0, self.smile.0)}
+                    {crate::slider!("Height", 0.0, 2.0, self.smile.1)}
                 </Group>
             </Group>
         )
     }
 
     pub fn view(&self, face_ry: Value) -> Html {
-        let y = self.position.get() * face_ry;
-        let left = -0.5 * self.width.get();
-        let right = 0.5 * self.width.get();
+        let y = self.position * face_ry;
+        let left = -0.5 * self.width;
+        let right = 0.5 * self.width;
         let x = 0.0;
 
         let lip = format!(
             "M{} {} C{} {}, {} {}, {} {} C{} {}, {} {}, {} {} C{} {}, {} {}, {} {} Z",
             left,
             y,
-            left + self.top_lip.roundness.0.get(),
-            y - self.top_lip.roundness.1.get(),
-            x - self.top_lip.philtrum.0.get(),
-            y - self.top_lip.philtrum.1.get(),
+            left + self.top_lip.roundness.0,
+            y - self.top_lip.roundness.1,
+            x - self.top_lip.philtrum.0,
+            y - self.top_lip.philtrum.1,
             x,
-            y - self.top_lip.philtrum.1.get(),
-            x + self.top_lip.philtrum.0.get(),
-            y - self.top_lip.philtrum.1.get(),
-            right - self.top_lip.roundness.0.get(),
-            y - self.top_lip.roundness.1.get(),
+            y - self.top_lip.philtrum.1,
+            x + self.top_lip.philtrum.0,
+            y - self.top_lip.philtrum.1,
+            right - self.top_lip.roundness.0,
+            y - self.top_lip.roundness.1,
             right,
             y,
-            right - self.bottom_lip.roundness.0.get(),
-            y + self.bottom_lip.roundness.1.get(),
-            left + self.bottom_lip.roundness.0.get(),
-            y + self.bottom_lip.roundness.1.get(),
+            right - self.bottom_lip.roundness.0,
+            y + self.bottom_lip.roundness.1,
+            left + self.bottom_lip.roundness.0,
+            y + self.bottom_lip.roundness.1,
             left,
             y
         );
@@ -97,17 +95,17 @@ impl Mouth {
             "M{} {} C{} {}, {} {}, {} {}",
             left,
             y,
-            left + self.smile.0.get(),
-            y + self.smile.1.get(),
-            right - self.smile.0.get(),
-            y + self.smile.1.get(),
+            left + self.smile.0,
+            y + self.smile.1,
+            right - self.smile.0,
+            y + self.smile.1,
             right,
             y
         );
 
         html!(
             <>
-                <path id="lips" class="line" d=lip />
+                <path class="line" style=format!("fill: {};", self.color) d=lip />
                 <path class="line" d=smile />
             </>
         )
