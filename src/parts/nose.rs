@@ -16,23 +16,23 @@ impl Nose {
     pub fn controls(&mut self, value_changed: Callback<()>) -> Html {
         html!(
             <Group name="Nose">
-                {crate::slider!("Width", 0.0, 4.0, self.width)}
-                {crate::slider!("Height", 0.0, 5.0, self.height)}
+                {crate::slider!("Width", 0.0, 4.0, self.width, value_changed)}
+                {crate::slider!("Height", 0.0, 5.0, self.height, value_changed)}
                 <Group name="Bridge">
                     <Group name="Gap">
-                        {crate::slider!("X", 0.0, 2.0, self.bridge_gap.0)}
-                        {crate::slider!("Y", 0.0, 2.0, self.bridge_gap.1)}
+                        {crate::slider!("X", 0.0, 2.0, self.bridge_gap.0, value_changed)}
+                        {crate::slider!("Y", 0.0, 2.0, self.bridge_gap.1, value_changed)}
                     </Group>
                     <Group name="Top Curve">
-                        {crate::slider!("X", 0.0, 4.0, self.bridge_top_curve.0)}
-                        {crate::slider!("Y", 0.0, 4.0, self.bridge_top_curve.1)}
+                        {crate::slider!("X", 0.0, 4.0, self.bridge_top_curve.0, value_changed)}
+                        {crate::slider!("Y", 0.0, 4.0, self.bridge_top_curve.1, value_changed)}
                     </Group>
                     <Group name="Side Curve">
-                        {crate::slider!("X", 0.0, 1.0, self.bridge_side_curve.0)}
-                        {crate::slider!("Y", 0.0, 1.0, self.bridge_side_curve.1)}
+                        {crate::slider!("X", 0.0, 1.0, self.bridge_side_curve.0, value_changed)}
+                        {crate::slider!("Y", 0.0, 1.0, self.bridge_side_curve.1, value_changed)}
                     </Group>
-                    {crate::slider!("Nostril", 0.0, 0.5, self.nostril_radius)}
-                    {crate::slider!("Tip", 0.0, 0.5, self.tip_curve)}
+                    {crate::slider!("Nostril", 0.0, 0.5, self.nostril_radius, value_changed)}
+                    {crate::slider!("Tip", 0.0, 0.5, self.tip_curve, value_changed)}
                 </Group>
             </Group>
         )
