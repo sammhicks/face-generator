@@ -36,8 +36,8 @@ impl Forehead {
     pub fn controls(&mut self, value_changed: Callback<()>) -> Html {
         html!(
             <Group name="Forehead">
-                {crate::slider!("RX", 0.0, 7.0, self.roundness.0)}
-                {crate::slider!("RY", 0.0, 10.0, self.roundness.1)}
+                {crate::slider!("RX", 0.0, 7.0, self.roundness.0, value_changed)}
+                {crate::slider!("RY", 0.0, 10.0, self.roundness.1, value_changed)}
             </Group>
         )
     }
@@ -53,10 +53,10 @@ impl Fringe {
     pub fn controls(&mut self, value_changed: Callback<()>) -> Html {
         html!(
             <Group name="Fringe">
-                {crate::color!("Color", self.hair_color)}
-                {crate::slider!("Thickness", 0.0, 10.0, self.thickness)}
-                {crate::slider!("RX", 0.0, 7.0, self.roundness.0)}
-                {crate::slider!("RY", 0.0, 10.0, self.roundness.1)}
+                {crate::color!("Color", self.hair_color, value_changed)}
+                {crate::slider!("Thickness", 0.0, 10.0, self.thickness, value_changed)}
+                {crate::slider!("RX", 0.0, 7.0, self.roundness.0, value_changed)}
+                {crate::slider!("RY", 0.0, 10.0, self.roundness.1, value_changed)}
             </Group>
         )
     }
@@ -70,8 +70,8 @@ impl Chin {
     pub fn controls(&mut self, value_changed: Callback<()>) -> Html {
         html!(
             <Group name="Chin">
-                {crate::slider!("RX", 0.0, 7.0, self.roundness.0)}
-                {crate::slider!("RY", 0.0, 10.0, self.roundness.1)}
+                {crate::slider!("RX", 0.0, 7.0, self.roundness.0, value_changed)}
+                {crate::slider!("RY", 0.0, 10.0, self.roundness.1, value_changed)}
             </Group>
         )
     }
@@ -90,9 +90,9 @@ impl Face {
     pub fn controls(&mut self, value_changed: Callback<()>) -> Html {
         html!(
             <Group name="Face">
-                {crate::color!("Skin", self.skin_color)}
-                {crate::slider!("Width", 0.0, 16.0, self.width)}
-                {crate::slider!("Height", 0.0, 32.0, self.height)}
+                {crate::color!("Skin", self.skin_color, value_changed)}
+                {crate::slider!("Width", 0.0, 16.0, self.width, value_changed)}
+                {crate::slider!("Height", 0.0, 32.0, self.height, value_changed)}
                 {self.forehead.controls(value_changed.clone())}
                 {self.fringe.controls(value_changed.clone())}
                 {self.chin.controls(value_changed.clone())}

@@ -18,14 +18,14 @@ impl Eyes {
     pub fn controls(&mut self, value_changed: Callback<()>) -> Html {
         html!(
             <Group name="Eyes">
-                {crate::color!("Color", self.color)}
-                {crate::slider!("Width", 0.0, 6.0, self.size.0)}
-                {crate::slider!("Height", 0.0, 3.0, self.size.1)}
-                {crate::slider!("Separation", 0.0, 6.0, self.separation)}
+                {crate::color!("Color", self.color, value_changed)}
+                {crate::slider!("Width", 0.0, 6.0, self.size.0, value_changed)}
+                {crate::slider!("Height", 0.0, 3.0, self.size.1, value_changed)}
+                {crate::slider!("Separation", 0.0, 6.0, self.separation, value_changed)}
                 <Group name="Brows">
-                    {crate::slider!("B1", 0.0, 2.0, self.brows.end_height.0)}
-                    {crate::slider!("B2", 0.0, 2.0, self.brows.curve)}
-                    {crate::slider!("B3", 0.0, 2.0, self.brows.end_height.1)}
+                    {crate::slider!("B1", 0.0, 2.0, self.brows.end_height.0, value_changed)}
+                    {crate::slider!("B2", 0.0, 2.0, self.brows.curve, value_changed)}
+                    {crate::slider!("B3", 0.0, 2.0, self.brows.end_height.1, value_changed)}
                 </Group>
             </Group>
         )

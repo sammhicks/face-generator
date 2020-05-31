@@ -60,7 +60,7 @@ impl Component for ColorPicker {
 
 #[macro_export]
 macro_rules! color {
-    ( $name:expr, $value:expr ) => {
-        html!(<ColorPicker name=$name value=&mut $value as *mut String value_changed=value_changed.clone() />)
+    ( $name:expr, $value:expr, $value_changed:expr) => {
+        html!(<ColorPicker name=$name value=&mut $value as *mut String value_changed=$value_changed.clone() />)
     };
 }

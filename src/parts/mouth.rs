@@ -11,11 +11,11 @@ impl TopLip {
     pub fn controls(&mut self, value_changed: Callback<()>) -> Html {
         html!(
             <Group name="Top Lip">
-                {crate::slider!("RX", 0.0, 2.0, self.roundness.0)}
-                {crate::slider!("RY", 0.0, 2.0, self.roundness.1)}
+                {crate::slider!("RX", 0.0, 2.0, self.roundness.0, value_changed)}
+                {crate::slider!("RY", 0.0, 2.0, self.roundness.1, value_changed)}
                 <Group name="Philtrum">
-                    {crate::slider!("Width", 0.0, 1.0, self.philtrum.0)}
-                    {crate::slider!("Position", 0.0, 1.0, self.philtrum.1)}
+                    {crate::slider!("Width", 0.0, 1.0, self.philtrum.0, value_changed)}
+                    {crate::slider!("Position", 0.0, 1.0, self.philtrum.1, value_changed)}
                 </Group>
             </Group>
         )
@@ -30,8 +30,8 @@ impl BottomLip {
     pub fn controls(&mut self, value_changed: Callback<()>) -> Html {
         html!(
             <Group name="Bottom Lip">
-                {crate::slider!("RX", 0.0, 2.0, self.roundness.0)}
-                {crate::slider!("RY", 0.0, 2.0, self.roundness.1)}
+                {crate::slider!("RX", 0.0, 2.0, self.roundness.0, value_changed)}
+                {crate::slider!("RY", 0.0, 2.0, self.roundness.1, value_changed)}
             </Group>
         )
     }
@@ -50,12 +50,12 @@ impl Mouth {
     pub fn controls(&mut self, value_changed: Callback<()>) -> Html {
         html!(
             <Group name="Mouth">
-                {crate::color!("Color", self.color)}
+                {crate::color!("Color", self.color, value_changed)}
                 {self.top_lip.controls(value_changed.clone())}
                 {self.bottom_lip.controls(value_changed.clone())}
                 <Group name="Smile">
-                    {crate::slider!("Width", 0.0, 2.0, self.smile.0)}
-                    {crate::slider!("Height", 0.0, 2.0, self.smile.1)}
+                    {crate::slider!("Width", 0.0, 2.0, self.smile.0, value_changed)}
+                    {crate::slider!("Height", 0.0, 2.0, self.smile.1, value_changed)}
                 </Group>
             </Group>
         )

@@ -53,7 +53,7 @@ impl ScaledHead {
         html!(
             <>
                 <Group name="Grid">
-                    {crate::slider!("Size", 8.0, 32.0, self.scale)}
+                    {crate::slider!("Size", 8.0, 32.0, self.scale, value_changed)}
                 </Group>
                 {self.head.controls(value_changed.clone())}
             </>
